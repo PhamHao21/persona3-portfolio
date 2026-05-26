@@ -1,6 +1,6 @@
 <script>
 	import { onMount } from 'svelte';
-	import bgVideo from '$lib/assets/main1.mp4';
+	import bgVideo from '$lib/assets/water-main-menu2.webm?url';
 	import char1 from '$lib/assets/char1.png';
 	import char2 from '$lib/assets/char2.png';
 	import char3 from '$lib/assets/char3.png';

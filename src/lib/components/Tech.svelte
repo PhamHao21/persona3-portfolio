@@ -1,6 +1,6 @@
 <script>
 	import { onMount } from 'svelte';
-	import bgVideo from '$lib/assets/main1.mp4';
+	import bgVideo from '$lib/assets/water-main-menu2.webm?url';
 	import { educationRows, resumeItems } from '$lib/data/tech.js';
 
 	let active = $state(1);

@@ -1,5 +1,5 @@
 <script>
-	import bgVideo from '$lib/assets/main1.mp4';
+	import bgVideo from '$lib/assets/water-main-menu2.webm?url';
 </script>
 
 <div id="menu-screen">
