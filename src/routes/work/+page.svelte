@@ -1,10 +1,15 @@
 <script>
 	import PageTransition from '$lib/components/PageTransition.svelte';
 	import PageKeyNavigation from '$lib/components/PageKeyNavigation.svelte';
-	import SideProjects from '$lib/components/Work.svelte';
+	import Work from '$lib/components/Work.svelte';
 </script>
 
-<PageTransition>
-	<SideProjects />
+<svelte:head>
+	<title>Work | Thorwen Pham</title>
+	<meta name="description" content="Current work status, featured builds, and professional focus." />
+</svelte:head>
+
+<PageTransition variant="work">
+	<Work />
 	<PageKeyNavigation />
 </PageTransition>

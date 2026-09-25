@@ -1,437 +1,144 @@
 <script>
 	import { onMount } from 'svelte';
-	import bgVideo from '$lib/assets/water-main-menu2.webm?url';
-	import { educationRows, resumeItems } from '$lib/data/tech.js';
+	import PortfolioShell from '$lib/components/PortfolioShell.svelte';
+	import { skillGroups } from '$lib/data/portfolio.js';
 
-	let active = $state(1);
-	let mounted = $state(false);
+	let active = $state(0);
+	let current = $derived(skillGroups[active]);
 
 	onMount(() => {
-		const timer = window.setTimeout(() => {
-			mounted = true;
-		}, 80);
-
-		return () => {
-			window.clearTimeout(timer);
+		const onKey = (event) => {
+			if (event.key === 'ArrowUp') active = Math.max(0, active - 1);
+			if (event.key === 'ArrowDown') active = Math.min(skillGroups.length - 1, active + 1);
 		};
+		window.addEventListener('keydown', onKey);
+		return () => window.removeEventListener('keydown', onKey);
 	});
 </script>
 
-<div id="menu-screen">
-	<video src={bgVideo} autoplay loop muted playsinline></video>
-	<div class="resume-entry-mask" aria-hidden="true">
-		<video class="resume-entry-video" src={bgVideo} autoplay loop muted playsinline></video>
-	</div>
+<PortfolioShell section="TECH" pageCode="03" kicker="ABILITY // LOADOUT">
+	<section class="tech-layout">
+		<div class="tech-lead">
+			<p class="tech-overline">EQUIPPED ABILITIES</p>
+			<h1>TECH<br /><span>LOADOUT</span></h1>
+			<p class="tech-summary">
+				A practical stack for building visual interfaces—from structure and state to motion and
+				deployment.
+			</p>
+			<div class="tech-total"><strong>12</strong><span>CORE<br />ABILITIES</span></div>
+		</div>
 
-	<div class="resume-overlay">
-		<div class="resume-stack">
-			<div class:mounted class="resume-list-tag">LIST</div>
-
-			{#each resumeItems as item, index}
+		<div class="skill-deck">
+			{#each skillGroups as group, index}
 				<button
 					type="button"
 					class:active={active === index}
-					class:mounted
-					class="resume-card-wrap"
-					style:transition-delay={`${index * 55}ms`}
-					onmouseenter={() => {
-						active = index;
-					}}
-					onclick={() => {
-						active = index;
-					}}
+					style={`--item-delay: ${150 + index * 65}ms`}
+					onclick={() => (active = index)}
+					onmouseenter={() => (active = index)}
+					onfocus={() => (active = index)}
 				>
-					<div class="resume-card">
-						<div class="resume-badge">
-							<div class="resume-badge-text">{item.badge}</div>
-						</div>
-						<div class="resume-card-inner">
-							<div class="resume-title">{item.title}</div>
-							<div class="resume-rank">
-								<div class="resume-rank-label">RANK</div>
-								<div class="resume-rank-number">{item.rank}</div>
-							</div>
-						</div>
-						<div class="resume-subtitle-bar">
-							<div class="resume-subtitle">{item.subtitle}</div>
-						</div>
-					</div>
+					<span class="skill-code">{group.code}</span>
+					<span class="skill-name"><strong>{group.label}</strong><small>{group.subtitle}</small></span>
+					<span class="skill-rank"><small>RANK</small>{group.rank}</span>
 				</button>
 			{/each}
 		</div>
 
-		{#if active === 0}
-			<div class="resume-detail-panel">
-				<div class="resume-detail-top">
-					<div class="resume-detail-top-index">01</div>
-					<div class="resume-detail-top-title">EDUCATION LOG</div>
-					<div class="resume-detail-top-progress">7/5</div>
+		{#key active}
+			<article class="skill-panel">
+				<div class="panel-head">
+					<div><span>SELECTED LOADOUT</span><h2>{current.label}</h2></div>
+					<strong>{current.rank}</strong>
 				</div>
+				<p class="panel-description">{current.description}</p>
 
-				<div class="resume-detail-list">
-					{#each educationRows as row}
-						<div class="resume-detail-row">
-							<div class="resume-detail-row-index">{row.index}</div>
-							<div class="resume-detail-row-title">{row.title}</div>
-							<div class="resume-detail-status">{row.status}</div>
+				<div class="ability-list">
+					{#each current.skills as skill, index}
+						<div class="ability" style={`--level: ${skill.level}%; --delay: ${index * 80}ms`}>
+							<div class="ability-row">
+								<span>{String(index + 1).padStart(2, '0')}</span>
+								<strong>{skill.name}</strong>
+								<em>{skill.level}</em>
+							</div>
+							<div class="ability-track"><i></i></div>
+							<p>{skill.note}</p>
 						</div>
 					{/each}
 				</div>
-
-				<div class="resume-detail-bottom">
-					<div class="resume-detail-bottom-title">DETAILS</div>
-					<div class="resume-detail-bullets">
-						<div class="resume-detail-bullet">- Maintain progress across required classes and supporting work.</div>
-						<div class="resume-detail-bullet">- Track portfolio-ready projects tied to coursework and labs.</div>
-						<div class="resume-detail-bullet">- Keep materials prepared for internships, research, and review.</div>
-					</div>
-				</div>
-			</div>
-		{/if}
-	</div>
-</div>
+			</article>
+		{/key}
+	</section>
+</PortfolioShell>
 
 <style>
-	.resume-entry-mask {
-		position: absolute;
-		inset: 0;
-		z-index: 9;
-		overflow: hidden;
-		background: #0047ff;
-		clip-path: circle(0 at 50% 50%);
-		animation: resume-entry-reveal 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-		pointer-events: none;
+	.tech-layout { min-height: 100%; display: grid; grid-template-columns: minmax(280px, 0.62fr) minmax(330px, 0.78fr) minmax(420px, 1fr); gap: clamp(24px, 3vw, 54px); align-items: center; padding: 100px 5vw 70px 7vw; }
+	.tech-lead { position: relative; animation: lead-enter 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.06s both; }
+	.tech-overline { margin-bottom: 10px; color: #6af0ff; font-size: 12px; font-weight: 700; letter-spacing: 4px; }
+	h1 { font-family: 'Anton', sans-serif; font-size: clamp(70px, 7.5vw, 122px); font-style: italic; font-weight: 400; letter-spacing: -3px; line-height: 0.78; color: #f6fbff; text-shadow: 9px 7px 0 rgba(8, 54, 157, 0.8); }
+	h1 span { color: #67efff; }
+	.tech-summary { max-width: 450px; margin-top: 27px; padding-left: 17px; border-left: 4px solid #ff4669; color: rgba(230, 248, 255, 0.72); font-size: 19px; line-height: 1.4; }
+	.tech-total { display: flex; align-items: center; gap: 12px; margin-top: 24px; }
+	.tech-total strong { font-family: 'Anton', sans-serif; font-size: 62px; font-style: italic; line-height: 1; color: #fff; }
+	.tech-total span { color: rgba(116, 235, 255, 0.58); font-size: 11px; font-weight: 700; line-height: 1.1; letter-spacing: 2px; }
+
+	.skill-deck { display: flex; flex-direction: column; gap: 10px; }
+	.skill-deck button { position: relative; display: grid; grid-template-columns: 54px 1fr 58px; align-items: center; gap: 13px; min-height: 82px; padding: 10px 17px; overflow: hidden; border: 1px solid rgba(114, 234, 255, 0.15); background: rgba(4, 11, 46, 0.72); color: #eafaff; clip-path: polygon(0 0, 96% 0, 100% 100%, 4% 100%); cursor: pointer; transition: transform 0.38s cubic-bezier(0.22, 1, 0.36, 1), background 0.24s ease; animation: deck-enter 0.56s cubic-bezier(0.16, 1, 0.3, 1) var(--item-delay) backwards; }
+	.skill-deck button::after { content: ''; position: absolute; inset: 0 auto 0 -50%; width: 26%; background: linear-gradient(90deg, transparent, rgba(104, 239, 255, 0.27), transparent); transform: skewX(-18deg); transition: left 0.48s cubic-bezier(0.16, 1, 0.3, 1); }
+	.skill-deck button:hover::after, .skill-deck button.active::after { left: 120%; }
+	.skill-deck button > span { position: relative; z-index: 1; }
+	.skill-deck button:hover { transform: translateX(6px); background: rgba(9, 33, 102, 0.86); }
+	.skill-deck button.active { color: #05113a; background: #f7fbff; transform: translateX(14px); box-shadow: -10px 7px 0 #ff4669; }
+	.skill-code { font-family: 'Anton', sans-serif; font-size: 31px; font-style: italic; color: #63edff; text-align: center; }
+	.active .skill-code { color: #ff4669; }
+	.skill-name { min-width: 0; text-align: left; }
+	.skill-name strong, .skill-name small { display: block; }
+	.skill-name strong { font-family: 'Anton', sans-serif; font-size: 27px; font-weight: 400; letter-spacing: 1px; line-height: 1; }
+	.skill-name small { margin-top: 5px; color: rgba(164, 231, 255, 0.5); font-size: 10px; font-weight: 700; letter-spacing: 1.8px; }
+	.active .skill-name small { color: rgba(5, 17, 58, 0.55); }
+	.skill-rank { display: flex; flex-direction: column; align-items: center; font-family: 'Anton', sans-serif; font-size: 35px; line-height: 0.9; }
+	.skill-rank small { margin-bottom: 5px; color: #ff5372; font-family: 'Barlow Condensed', sans-serif; font-size: 9px; letter-spacing: 1.5px; }
+
+	.skill-panel { position: relative; padding: 28px 30px 34px; background: rgba(3, 10, 40, 0.88); border-top: 4px solid #63efff; clip-path: polygon(0 0, 100% 0, calc(100% - 32px) 100%, 0 100%); box-shadow: 18px 17px 0 rgba(0, 3, 20, 0.45); backdrop-filter: blur(13px); animation: panel-in 0.48s cubic-bezier(0.16, 1, 0.3, 1) both; }
+	.panel-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; }
+	.panel-head span { color: rgba(135, 234, 255, 0.5); font-size: 10px; font-weight: 700; letter-spacing: 3px; }
+	h2 { margin-top: 5px; font-family: 'Anton', sans-serif; font-size: clamp(48px, 4.4vw, 74px); font-weight: 400; line-height: 0.9; }
+	.panel-head > strong { font-family: 'Anton', sans-serif; font-size: 82px; font-style: italic; line-height: 0.8; color: #ff496c; text-shadow: 5px 4px 0 rgba(255, 255, 255, 0.12); }
+	.panel-description { margin-top: 20px; color: rgba(229, 247, 255, 0.68); font-size: 18px; line-height: 1.4; }
+	.ability-list { display: flex; flex-direction: column; gap: 20px; margin-top: 30px; }
+	.ability { animation: ability-in 0.45s cubic-bezier(0.16, 1, 0.3, 1) var(--delay) both; }
+	.ability-row { display: grid; grid-template-columns: 28px 1fr auto; align-items: baseline; gap: 9px; }
+	.ability-row span { color: #64ecff; font-size: 10px; letter-spacing: 1px; }
+	.ability-row strong { font-size: 20px; letter-spacing: 1px; text-transform: uppercase; }
+	.ability-row em { color: #fff; font-family: 'Anton', sans-serif; font-size: 25px; font-style: italic; }
+	.ability-track { height: 9px; margin-top: 7px; padding: 2px; background: rgba(103, 235, 255, 0.11); transform: skewX(-12deg); overflow: hidden; }
+	.ability-track i { display: block; width: var(--level); height: 100%; background: linear-gradient(90deg, #0a56d5, #69f2ff 75%, #fff); transform-origin: left; animation: meter-in 0.8s cubic-bezier(0.16, 1, 0.3, 1) calc(var(--delay) + 100ms) both; }
+	.ability > p { margin: 6px 0 0 37px; color: rgba(178, 226, 244, 0.47); font-size: 12px; letter-spacing: 1.2px; }
+
+	@keyframes panel-in { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
+	@keyframes ability-in { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+	@keyframes meter-in { from { transform: skewX(12deg) scaleX(0); } to { transform: skewX(12deg) scaleX(1); } }
+	@keyframes lead-enter { from { opacity: 0; transform: translate3d(-30px, 12px, 0); } to { opacity: 1; transform: translate3d(0, 0, 0); } }
+	@keyframes deck-enter { from { opacity: 0; transform: translate3d(30px, 14px, 0) skewX(-2deg); } to { opacity: 1; transform: translate3d(0, 0, 0) skewX(0); } }
+
+	@media (max-width: 1100px) {
+		.tech-layout { grid-template-columns: 0.7fr 1fr; padding-top: 130px; }
+		.tech-lead { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; align-items: end; }
+		.tech-summary { grid-column: 2; grid-row: 1 / span 2; }
+		.tech-total { display: none; }
 	}
 
-	.resume-entry-video {
-		position: absolute;
-		inset: 0;
-		width: 100%;
-		height: 100%;
-		object-fit: cover;
+	@media (max-width: 800px) {
+		.tech-layout { grid-template-columns: 1fr; padding: 155px 20px 90px; }
+		.tech-lead { display: block; }
+		h1 { font-size: clamp(62px, 22vw, 96px); }
+		.skill-deck { flex-direction: row; overflow-x: auto; padding: 8px 8px 14px; scroll-snap-type: x mandatory; }
+		.skill-deck button { min-width: min(310px, calc(100vw - 64px)); scroll-snap-align: start; }
+		.skill-deck button.active { transform: translateX(4px); }
+		.skill-panel { min-height: 450px; }
 	}
 
-	.resume-overlay {
-		position: absolute;
-		inset: 0;
-		z-index: 10;
-		pointer-events: none;
-	}
-
-	.resume-stack {
-		position: absolute;
-		top: 9vh;
-		left: 2.8vw;
-		width: min(47vw, 720px);
-		display: flex;
-		flex-direction: column;
-		gap: 10px;
-		pointer-events: none;
-		transform: scale(0.9);
-		transform-origin: top left;
-	}
-
-	.resume-list-tag {
-		font-family: 'Anton', sans-serif;
-		font-size: 92px;
-		line-height: 0.9;
-		color: #f6fbff;
-		letter-spacing: 2px;
-		margin: 0 0 6px 12px;
-		text-shadow: 0 2px 0 rgba(0, 0, 0, 0.18);
-		opacity: 0;
-		transform: translateX(-24px);
-		transition: opacity 0.35s ease, transform 0.35s ease;
-	}
-
-	.resume-list-tag.mounted {
-		opacity: 1;
-		transform: translateX(0);
-	}
-
-	.resume-card-wrap {
-		position: relative;
-		display: block;
-		width: 100%;
-		padding: 0;
-		border: 0;
-		background: transparent;
-		font: inherit;
-		text-align: left;
-		opacity: 0;
-		transform: translateX(-48px);
-		transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
-		pointer-events: all;
-		cursor: pointer;
-	}
-
-	.resume-card-wrap.mounted {
-		opacity: 1;
-		transform: translateX(0);
-	}
-
-	.resume-card {
-		position: relative;
-		height: 112px;
-		background: #10185f;
-		clip-path: polygon(0 0, 97% 0, 100% 100%, 3% 100%);
-		box-shadow: 0 8px 0 rgba(5, 13, 59, 0.85);
-		transition: transform 0.22s ease, background 0.22s ease, box-shadow 0.22s ease;
-		overflow: visible;
-	}
-
-	.resume-card-wrap.active .resume-card {
-		background: #fff;
-		box-shadow: 10px 8px 0 #d63232;
-		transform: translateX(6px);
-	}
-
-	.resume-card-inner {
-		position: absolute;
-		inset: 0;
-		padding: 14px 22px 14px 62px;
-		display: flex;
-		align-items: flex-start;
-		justify-content: space-between;
-	}
-
-	.resume-badge {
-		position: absolute;
-		top: 10px;
-		left: -10px;
-		width: 56px;
-		height: 70px;
-		background: #0b113d;
-		border: 3px solid #9cf7ff;
-		clip-path: polygon(14% 0, 100% 0, 84% 100%, 0 100%);
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		transform: rotate(-8deg);
-		box-shadow: 0 4px 0 rgba(0, 0, 0, 0.28);
-		transition: background 0.22s ease, border-color 0.22s ease;
-	}
-
-	.resume-badge-text {
-		font-family: 'Bebas Neue', sans-serif;
-		font-size: 36px;
-		color: #d2fdff;
-		letter-spacing: 1px;
-		transform: rotate(8deg);
-	}
-
-	.resume-card-wrap.active .resume-badge {
-		background: #000;
-		border-color: #000;
-	}
-
-	.resume-card-wrap.active .resume-badge-text {
-		color: #fff;
-	}
-
-	.resume-title {
-		font-family: 'Anton', sans-serif;
-		font-size: 56px;
-		line-height: 0.9;
-		letter-spacing: 1px;
-		color: #a5f6ff;
-		transition: color 0.22s ease;
-	}
-
-	.resume-card-wrap.active .resume-title,
-	.resume-card-wrap.active .resume-rank-label,
-	.resume-card-wrap.active .resume-rank-number {
-		color: #000;
-	}
-
-	.resume-rank {
-		display: flex;
-		align-items: center;
-		gap: 10px;
-		margin-top: 2px;
-		flex-shrink: 0;
-	}
-
-	.resume-rank-label,
-	.resume-rank-number,
-	.resume-subtitle,
-	.resume-detail-status {
-		font-family: 'Bebas Neue', sans-serif;
-	}
-
-	.resume-rank-label {
-		font-size: 28px;
-		letter-spacing: 2px;
-		color: #9ffbff;
-		transition: color 0.22s ease;
-	}
-
-	.resume-rank-number {
-		font-family: 'Anton', sans-serif;
-		font-size: 70px;
-		line-height: 0.82;
-		color: #9ffbff;
-		transition: color 0.22s ease;
-	}
-
-	.resume-subtitle-bar {
-		position: absolute;
-		left: 64px;
-		right: 14px;
-		bottom: 12px;
-		height: 34px;
-		background: #85f4ff;
-		clip-path: polygon(0 0, 100% 0, calc(100% - 10px) 100%, 0 100%);
-		display: flex;
-		align-items: center;
-		padding: 0 18px;
-		transition: background 0.22s ease;
-	}
-
-	.resume-card-wrap.active .resume-subtitle-bar {
-		background: #000;
-	}
-
-	.resume-subtitle {
-		font-size: 28px;
-		line-height: 1;
-		letter-spacing: 1px;
-		color: #041238;
-		transition: color 0.22s ease;
-	}
-
-	.resume-card-wrap.active .resume-subtitle {
-		color: #fff;
-	}
-
-	.resume-detail-panel {
-		position: absolute;
-		top: 9.5vh;
-		right: 4.5vw;
-		width: min(39vw, 620px);
-		min-height: 74vh;
-		z-index: 12;
-		padding: 22px 24px 24px;
-		background: linear-gradient(180deg, rgba(15, 28, 105, 0.96), rgba(8, 16, 68, 0.97));
-		clip-path: polygon(0 0, 100% 0, calc(100% - 18px) 100%, 0 100%);
-		box-shadow: inset 0 0 0 1px rgba(133, 244, 255, 0.16), 16px 16px 0 rgba(0, 6, 30, 0.55);
-		overflow: hidden;
-	}
-
-	.resume-detail-panel::before {
-		content: "";
-		position: absolute;
-		inset: 0;
-		background:
-			linear-gradient(135deg, rgba(133, 244, 255, 0.08) 0 15%, transparent 15% 100%),
-			linear-gradient(180deg, rgba(255, 255, 255, 0.05), transparent 24%);
-		pointer-events: none;
-	}
-
-	.resume-detail-top {
-		position: relative;
-		display: grid;
-		grid-template-columns: 70px 1fr auto;
-		align-items: center;
-		gap: 14px;
-		min-height: 92px;
-		padding: 0 18px;
-		background: linear-gradient(90deg, #8ef5ff, #d3fdff);
-		clip-path: polygon(0 0, 100% 0, calc(100% - 16px) 100%, 0 100%);
-		color: #08153f;
-		box-shadow: 10px 0 0 rgba(255, 94, 136, 0.88);
-	}
-
-	.resume-detail-top-index,
-	.resume-detail-top-title,
-	.resume-detail-row-title,
-	.resume-detail-bullet {
-		font-family: 'Anton', sans-serif;
-	}
-
-	.resume-detail-top-index { font-size: 46px; line-height: 1; }
-	.resume-detail-top-title { font-size: 42px; line-height: 0.92; letter-spacing: 1px; }
-	.resume-detail-top-progress { font-family: 'Bebas Neue', sans-serif; font-size: 42px; letter-spacing: 2px; }
-
-	.resume-detail-list {
-		position: relative;
-		display: flex;
-		flex-direction: column;
-		gap: 10px;
-		margin-top: 18px;
-	}
-
-	.resume-detail-row {
-		display: grid;
-		grid-template-columns: 50px 1fr auto;
-		align-items: center;
-		gap: 14px;
-		min-height: 56px;
-		padding: 0 14px;
-		background: rgba(8, 18, 72, 0.96);
-		clip-path: polygon(0 0, 100% 0, calc(100% - 14px) 100%, 0 100%);
-		box-shadow: inset 0 0 0 1px rgba(140, 239, 255, 0.12);
-		transition: transform 0.16s ease, background 0.16s ease;
-	}
-
-	.resume-detail-row:hover {
-		transform: translateX(4px);
-		background: rgba(12, 26, 94, 1);
-	}
-
-	.resume-detail-row-index {
-		font-family: 'Bebas Neue', sans-serif;
-		font-size: 26px;
-		letter-spacing: 1px;
-		color: #94f4ff;
-	}
-
-	.resume-detail-row-title {
-		font-size: 28px;
-		line-height: 1;
-		color: #f2fcff;
-	}
-
-	.resume-detail-status {
-		font-size: 22px;
-		letter-spacing: 1.1px;
-		color: #06133b;
-		background: #8df6ff;
-		padding: 7px 12px;
-		clip-path: polygon(0 0, 100% 0, calc(100% - 8px) 100%, 0 100%);
-	}
-
-	.resume-detail-bottom {
-		position: relative;
-		margin-top: 22px;
-		padding: 18px;
-		background: rgba(5, 13, 57, 0.97);
-		clip-path: polygon(0 0, 100% 0, calc(100% - 16px) 100%, 0 100%);
-		box-shadow: inset 0 0 0 1px rgba(145, 239, 255, 0.12);
-	}
-
-	.resume-detail-bottom-title {
-		font-family: 'Bebas Neue', sans-serif;
-		font-size: 30px;
-		letter-spacing: 2px;
-		color: #91f5ff;
-		margin-bottom: 14px;
-	}
-
-	.resume-detail-bullets {
-		display: flex;
-		flex-direction: column;
-		gap: 10px;
-	}
-
-	.resume-detail-bullet {
-		font-size: 21px;
-		line-height: 1.15;
-		color: #edfaff;
-	}
-
-	@keyframes resume-entry-reveal {
-		from { clip-path: circle(0 at 50% 50%); }
-		to { clip-path: circle(150vmax at 50% 50%); }
+	@media (prefers-reduced-motion: reduce) {
+		.tech-lead, .skill-deck button, .skill-panel, .ability, .ability-track i { animation: none; }
 	}
 </style>

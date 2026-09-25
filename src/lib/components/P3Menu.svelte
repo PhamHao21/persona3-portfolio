@@ -68,7 +68,7 @@
 
 		const introTimer = window.setTimeout(() => {
 			introDone = true;
-		}, 720);
+		}, 900);
 
 		return () => {
 			window.clearTimeout(mountTimer);
@@ -125,7 +125,7 @@
 				class:mounted
 				class:point-left={pointsLeft}
 				class="p3-row"
-				style={`margin-right: ${item.offsetX}px; margin-top: ${item.offsetY}px; --entry-delay: ${i * 36}ms; --text-delay: ${introDone ? 0 : i * 36 + 82}ms; --accent-delay: ${introDone ? 42 : i * 36 + 125}ms; --accent-height: ${estH}px; --strip-tip: ${stripTip}px; --text-pad: ${textPad}px;`}
+				style={`margin-right: ${item.offsetX}px; margin-top: ${item.offsetY}px; --entry-delay: ${i * 48}ms; --text-delay: ${introDone ? 0 : i * 48 + 105}ms; --accent-delay: ${introDone ? 42 : i * 48 + 150}ms; --accent-height: ${estH}px; --strip-tip: ${stripTip}px; --text-pad: ${textPad}px;`}
 				aria-current={isActive ? 'page' : undefined}
 				onclick={(event) => handleMenuClick(event, item.page)}
 				onmouseenter={() => activate(i)}
@@ -182,7 +182,7 @@
 		justify-content: center;
 		pointer-events: none;
 		opacity: 0;
-		transition: opacity 0.28s ease;
+		transition: opacity 0.38s cubic-bezier(0.22, 1, 0.36, 1);
 	}
 
 	.p3-overlay.ready {
@@ -221,7 +221,7 @@
 	}
 
 	.p3-row.mounted {
-		animation: p3-menu-row-in 0.34s both;
+		animation: p3-menu-row-in 0.46s cubic-bezier(0.22, 1, 0.36, 1) both;
 		animation-delay: var(--entry-delay);
 		pointer-events: auto;
 	}

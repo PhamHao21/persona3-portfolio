@@ -3,20 +3,32 @@
 	import waterRiseVideo from '$lib/assets/water-main-menu1.webm?url';
 	import { playRippleTransition } from '$lib/utils/rippleTransition.js';
 
-	let { onComplete = () => {}, playEntrance: shouldPlayEntrance = true } = $props();
+	let {
+		onReveal = () => {},
+		onComplete = () => {},
+		playEntrance: shouldPlayEntrance = true
+	} = $props();
 
 	const startDelayMs = 0;
-	const fallbackDurationMs = 640;
-	const maxEntranceDurationMs = 820;
-	const fadeOutMs = 140;
+	const playbackRate = 1;
+	const revealAtSeconds = 1.25;
+	const handoffAtSeconds = 4.95;
+	const revealFallbackDurationMs = 2600;
+	const fallbackDurationMs = 6200;
+	const fallbackGraceMs = 350;
+	const fadeOutMs = 250;
 
 	let entranceVisible = $state(true);
 	let entranceDone = $state(false);
+	let handoffPending = false;
+	let menuRevealed = $state(false);
 	let blocking = $state(true);
 	let videoStarted = $state(false);
 	let entranceRemoveTimer;
 	let entranceFallbackTimer;
+	let revealFallbackTimer;
 	let entranceStartTimer;
+	let entranceProgressFrame;
 	let videoElement = $state();
 
 	function scheduleEntranceFallback(durationMs = fallbackDurationMs) {
@@ -26,13 +38,34 @@
 		}, durationMs);
 	}
 
-	function completeEntrance() {
-		if (entranceDone) return;
+	function scheduleRevealFallback(durationMs = revealFallbackDurationMs) {
+		window.clearTimeout(revealFallbackTimer);
+		revealFallbackTimer = window.setTimeout(revealMenu, durationMs);
+	}
 
-		entranceDone = true;
+	function revealMenu() {
+		if (menuRevealed) return;
+
+		menuRevealed = true;
 		blocking = false;
+		window.clearTimeout(revealFallbackTimer);
+		onReveal();
+	}
+
+	async function completeEntrance() {
+		if (entranceDone || handoffPending) return;
+
+		revealMenu();
+		handoffPending = true;
+		blocking = false;
+		window.cancelAnimationFrame(entranceProgressFrame);
 		window.clearTimeout(entranceFallbackTimer);
-		onComplete();
+		try {
+			await onComplete({ entranceTime: videoElement?.currentTime ?? handoffAtSeconds });
+		} finally {
+			entranceDone = true;
+			handoffPending = false;
+		}
 
 		entranceRemoveTimer = window.setTimeout(() => {
 			entranceVisible = false;
@@ -40,28 +73,41 @@
 	}
 
 	async function playEntranceVideo() {
-		if (!videoElement || entranceDone) return;
+		if (!videoElement || entranceDone || handoffPending) return;
 
 		if (videoStarted) return;
 
 		videoElement.muted = true;
 		videoElement.load();
 		videoElement.currentTime = 0;
-		videoElement.playbackRate = 0.9;
+		videoElement.playbackRate = playbackRate;
 		videoStarted = true;
-		videoElement.play().catch(() => {});
+		videoElement.play().then(monitorEntranceProgress).catch(completeEntrance);
+	}
+
+	function monitorEntranceProgress() {
+		if (!videoElement || entranceDone) return;
+
+		if (!menuRevealed && videoElement.currentTime >= revealAtSeconds) {
+			revealMenu();
+		}
+
+		if (videoElement.currentTime >= handoffAtSeconds) {
+			completeEntrance();
+			return;
+		}
+
+		entranceProgressFrame = window.requestAnimationFrame(monitorEntranceProgress);
 	}
 
 	function handleLoadedMetadata() {
 		if (!videoElement) return;
 
 		const rate = videoElement.playbackRate || 1;
-		const duration = videoElement.duration;
-		const durationMs =
-			Number.isFinite(duration) && duration > 0
-				? Math.min(Math.ceil((duration / rate) * 1000) + fadeOutMs, maxEntranceDurationMs)
-				: fallbackDurationMs;
+		const revealDurationMs = Math.ceil((revealAtSeconds / rate) * 1000) + fallbackGraceMs;
+		const durationMs = Math.ceil((handoffAtSeconds / rate) * 1000) + fallbackGraceMs;
 
+		scheduleRevealFallback(revealDurationMs);
 		scheduleEntranceFallback(durationMs);
 	}
 
@@ -69,7 +115,8 @@
 		entranceDone = true;
 		entranceVisible = false;
 		blocking = false;
-		onComplete();
+		revealMenu();
+		onComplete({ entranceTime: 0 });
 	}
 
 	export function triggerRipple(event) {
@@ -89,12 +136,15 @@
 		}, startDelayMs);
 
 		scheduleEntranceFallback(fallbackDurationMs);
+		scheduleRevealFallback(revealFallbackDurationMs);
 
 		return () => {
 			cancelled = true;
 			window.clearTimeout(entranceRemoveTimer);
 			window.clearTimeout(entranceFallbackTimer);
+			window.clearTimeout(revealFallbackTimer);
 			window.clearTimeout(entranceStartTimer);
+			window.cancelAnimationFrame(entranceProgressFrame);
 		};
 	});
 </script>
@@ -123,7 +173,7 @@
 	.water-transition {
 		position: fixed;
 		inset: 0;
-		z-index: 200;
+		z-index: 5;
 		pointer-events: none;
 	}
 
@@ -133,7 +183,7 @@
 		z-index: 1;
 		pointer-events: none;
 		opacity: 1;
-		transition: opacity 0.22s ease;
+		transition: opacity 0.25s linear;
 		background: #12d7f2;
 		overflow: hidden;
 	}
